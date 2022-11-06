@@ -1,0 +1,7 @@
+{
+  "type": "exec",
+  "params": [
+    {"name": "data", "type": "binary", "is_input": true}
+  ],
+  "output":  {"type": "binary"}
+}

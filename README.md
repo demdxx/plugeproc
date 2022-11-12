@@ -1,7 +1,7 @@
 # plugeproc
 
 [![Build Status](https://github.com/demdxx/plugeproc/workflows/run%20tests/badge.svg)](https://github.com/demdxx/plugeproc/actions?workflow=run%20tests)
-[![Coverage Status](https://coveralls.io/repos/github/demdxx/plugeproc/badge.svg?branch=master)](https://coveralls.io/github/demdxx/plugeproc?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/demdxx/plugeproc/badge.svg?branch=main)](https://coveralls.io/github/demdxx/plugeproc?branch=main)
 [![Go Report Card](https://goreportcard.com/badge/github.com/demdxx/plugeproc)](https://goreportcard.com/report/github.com/demdxx/plugeproc)
 [![GoDoc](https://godoc.org/github.com/demdxx/plugeproc?status.svg)](https://godoc.org/github.com/demdxx/plugeproc)
 

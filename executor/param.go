@@ -92,26 +92,36 @@ type Params []*Param
 
 // PrepareMacro automaticaly replace MACRO {{params}} on the value as a string
 func (p Params) PrepareMacro(template string) (string, error) {
+	rep, err := p.macroReplacer()
+	if err != nil {
+		return "", err
+	}
+	return rep.Replace(rep.Replace(template)), nil
+}
+
+// PrepareMacros automaticaly replace MACRO {{params}} on the value as a string
+func (p Params) PrepareMacros(vals ...string) (res []string, err error) {
+	rep, err := p.macroReplacer()
+	if err != nil {
+		return nil, err
+	}
+	res = make([]string, len(vals))
+	for i, v := range vals {
+		res[i] = rep.Replace(rep.Replace(v))
+	}
+	return res, nil
+}
+
+func (p Params) macroReplacer() (*strings.Replacer, error) {
 	repArgs := make([]string, 0, len(p))
 	for _, param := range p {
 		s, err := param.ValueStr()
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		repArgs = append(repArgs, param.MacroName(), s)
 	}
-	rep := strings.NewReplacer(repArgs...)
-	return rep.Replace(rep.Replace(template)), nil
-}
-
-func (p Params) PrepareMacros(vals ...string) (res []string, err error) {
-	res = make([]string, 0, len(vals))
-	for i, v := range vals {
-		if res[i], err = p.PrepareMacro(v); err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
+	return strings.NewReplacer(repArgs...), nil
 }
 
 // Release all related objects of the params

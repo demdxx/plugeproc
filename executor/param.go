@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/demdxx/gocast"
+	"github.com/demdxx/gocast/v2"
 )
 
 // Param input value accessor
@@ -48,7 +48,7 @@ func (p *Param) ValueStr() (string, error) {
 		}
 		return string(data), nil
 	default:
-		return gocast.ToString(p.Value), nil
+		return gocast.Str(p.Value), nil
 	}
 }
 

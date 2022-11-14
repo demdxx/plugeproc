@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/demdxx/gocast"
+	"github.com/demdxx/gocast/v2"
 	"github.com/demdxx/plugeproc/executor"
 )
 
@@ -42,7 +42,7 @@ func (pl *plugeproc) Exec(target any, params ...any) (err error) {
 		cparams executor.Params
 	)
 	if len(params) != len(pl.info.Params) {
-		return errors.Wrap(ErrInvalidCountOfParams, gocast.ToString(len(pl.info.Params)))
+		return errors.Wrap(ErrInvalidCountOfParams, gocast.Str(len(pl.info.Params)))
 	}
 	defer func() { _ = cparams.Release() }()
 	for i, p := range pl.info.Params {

@@ -1,0 +1,8 @@
+{
+  "type": "exec",
+  "args": ["{{data}}", "{{outfile}}"],
+  "params": [
+    {"name": "data", "type": "string", "is_input": false}
+  ],
+  "output":  {"name": "outfile", "type": "binary", "as_temp_file": true}
+}

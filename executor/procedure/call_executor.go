@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os/exec"
+	"strings"
 
 	"github.com/demdxx/plugeproc/executor"
 	"github.com/pkg/errors"
@@ -35,15 +36,16 @@ func NewCallExecutor(ctx context.Context, command string, args []string) *CallEx
 
 func (ce *CallExecutor) Exec(params []*executor.Param, out *executor.Output) error {
 	// Init new command executor
-	cmdStr, err := executor.Params(params).PrepareMacro(ce.command)
+	cmdStr, err := executor.Params(params).PrepareMacro(`"`, `\`, ce.command)
 	if err != nil {
 		return err
 	}
-	cmdArgs, err := executor.Params(params).PrepareMacros(ce.args...)
+	cmdArgs, err := executor.Params(params).PrepareMacros(`"`, `\`, ce.args...)
 	if err != nil {
 		return err
 	}
-	cmd := exec.CommandContext(ce.ctx, cmdStr, cmdArgs...)
+	newCmd := cmdStr + " " + strings.Join(cmdArgs, " ")
+	cmd := exec.CommandContext(ce.ctx, "/usr/bin/env", "bash", "-c", newCmd)
 	cmd.Stderr = &bytes.Buffer{}
 	if input, err := executor.Params(params).InputStream(false); err != nil {
 		return err

@@ -11,7 +11,7 @@ import (
 	"github.com/demdxx/plugeproc/models"
 )
 
-var errInvalidExternalProcInfo = errors.New(`invalid external proc info`)
+var errInvalidExternalProc = errors.New(`executable proc not found`)
 
 type Loader struct {
 	directory     string
@@ -63,7 +63,7 @@ func (l *Loader) Load() ([]*models.Info, error) {
 					}
 				}
 				if procInfo.Command == "" {
-					return errInvalidExternalProcInfo
+					return errInvalidExternalProc
 				}
 				procInfo.Type = models.ProgTypeShell
 			}

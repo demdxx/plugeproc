@@ -26,6 +26,10 @@ func tempFrom(in io.Reader) (*tmpFile, error) {
 			return nil, err
 		}
 	}
+	return tempOpen(filepath)
+}
+
+func tempOpen(filepath string) (*tmpFile, error) {
 	f, err := os.Open(filepath)
 	if err != nil {
 		return nil, err

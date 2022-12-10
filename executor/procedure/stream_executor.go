@@ -59,7 +59,7 @@ func (se *StreamExecutor) Exec(params []*executor.Param, out *executor.Output) e
 		return err
 	}
 
-	if out.Type == "binary" {
+	if out.Type == executor.TypeBinary {
 		bsize := make([]byte, 4)
 		_, err = se.stdout.Read(bsize)
 		if err == nil {

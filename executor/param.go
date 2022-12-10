@@ -10,6 +10,13 @@ import (
 	"github.com/demdxx/gocast/v2"
 )
 
+const (
+	TypeString = "string"
+	TypeJSON   = "json"
+	TypeBinary = "binary"
+	TypeFile   = "file"
+)
+
 // Param input value accessor
 type Param struct {
 	Name         string
@@ -17,6 +24,7 @@ type Param struct {
 	Value        any
 	IsInput      bool
 	AsTempFile   bool
+	Out          *Output
 	tempFilepath string
 }
 
@@ -26,22 +34,28 @@ func (p *Param) MacroName() string {
 
 func (p *Param) ValueStr() (string, error) {
 	switch p.Type {
-	case "binary":
+	case TypeBinary:
 		if p.AsTempFile {
-			if p.tempFilepath == "" {
-				iobj, err := p.Binary()
-				if err != nil {
-					return "", err
-				}
-				p.tempFilepath, err = tempFileCreate(iobj)
-				if err != nil {
-					return "", err
+			if p.tempFilepath == "" && p.AsTempFile {
+				if p.Out == nil {
+					iobj, err := p.Binary()
+					if err != nil {
+						return "", err
+					}
+					if p.tempFilepath, err = tempFileCreate(iobj); err != nil {
+						return "", err
+					}
+				} else {
+					var err error
+					if p.tempFilepath, err = p.Out.TargetFilepath(); err != nil {
+						return "", err
+					}
 				}
 			}
 			return p.tempFilepath, nil
 		}
 		return "binary-type", nil
-	case "json":
+	case TypeJSON:
 		data, err := json.Marshal(p.Value)
 		if err != nil {
 			return "", err
@@ -78,7 +92,7 @@ func (p *Param) Binary() (io.ReadCloser, error) {
 
 // Release related objects
 func (p *Param) Release() error {
-	if p.tempFilepath != "" {
+	if p.AsTempFile && p.tempFilepath != "" && p.Out == nil {
 		if err := os.Remove(p.tempFilepath); err != nil {
 			return err
 		}
@@ -91,8 +105,8 @@ func (p *Param) Release() error {
 type Params []*Param
 
 // PrepareMacro automaticaly replace MACRO {{params}} on the value as a string
-func (p Params) PrepareMacro(template string) (string, error) {
-	rep, err := p.macroReplacer()
+func (p Params) PrepareMacro(escSimbol, esc, template string) (string, error) {
+	rep, err := p.macroReplacer(escSimbol, esc)
 	if err != nil {
 		return "", err
 	}
@@ -100,8 +114,8 @@ func (p Params) PrepareMacro(template string) (string, error) {
 }
 
 // PrepareMacros automaticaly replace MACRO {{params}} on the value as a string
-func (p Params) PrepareMacros(vals ...string) (res []string, err error) {
-	rep, err := p.macroReplacer()
+func (p Params) PrepareMacros(escSimbol, esc string, vals ...string) (res []string, err error) {
+	rep, err := p.macroReplacer(escSimbol, esc)
 	if err != nil {
 		return nil, err
 	}
@@ -112,12 +126,17 @@ func (p Params) PrepareMacros(vals ...string) (res []string, err error) {
 	return res, nil
 }
 
-func (p Params) macroReplacer() (*strings.Replacer, error) {
+func (p Params) macroReplacer(escSimbol, esc string) (*strings.Replacer, error) {
 	repArgs := make([]string, 0, len(p))
 	for _, param := range p {
 		s, err := param.ValueStr()
 		if err != nil {
 			return nil, err
+		}
+		if escSimbol != "" {
+			s = escSimbol + strings.ReplaceAll(
+				strings.ReplaceAll(s, esc, esc+esc),
+				escSimbol, esc+escSimbol) + escSimbol
 		}
 		repArgs = append(repArgs, param.MacroName(), s)
 	}

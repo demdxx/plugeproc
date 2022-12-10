@@ -2,9 +2,9 @@ package plugeproc
 
 import (
 	"context"
-	"io"
 
 	"github.com/pkg/errors"
+	"go.uber.org/multierr"
 
 	"github.com/demdxx/gocast/v2"
 	"github.com/demdxx/plugeproc/executor"
@@ -38,8 +38,11 @@ func (pl *plugeproc) Info() *Info {
 
 func (pl *plugeproc) Exec(target any, params ...any) (err error) {
 	var (
-		out     = &executor.Output{Type: pl.info.Output.Type}
 		cparams executor.Params
+		out     = &executor.Output{
+			Type:           pl.info.Output.Type,
+			AsTempFilepath: pl.info.Output.AsTempFile,
+		}
 	)
 	if len(params) != len(pl.info.Params) {
 		return errors.Wrap(ErrInvalidCountOfParams, gocast.Str(len(pl.info.Params)))
@@ -54,25 +57,22 @@ func (pl *plugeproc) Exec(target any, params ...any) (err error) {
 			AsTempFile: p.AsTempFile,
 		})
 	}
+	// In some cases we have to define the target filepath as output
+	if pl.info.Output.Name != "" && pl.info.Output.AsTempFile {
+		cparams = append(cparams, &executor.Param{
+			Name:       pl.info.Output.Name,
+			Type:       pl.info.Output.Type,
+			Value:      nil,
+			IsInput:    false,
+			AsTempFile: true,
+			Out:        out,
+		})
+	}
 	if err = pl.executor.Exec(cparams, out); err != nil {
 		return err
 	}
-	switch t := target.(type) {
-	case *io.Reader:
-		*t = out.Value
-	case *io.ReadWriter:
-		*t = out.Value
-	case *io.ReadCloser:
-		*t = out.Value
-	case *io.ReadWriteCloser:
-		*t = out.Value
-	case io.Writer:
-		_, err = io.Copy(t, out.Value)
-	default:
-		err = out.JSON(target)
-	}
-	_ = out.Release()
-	return err
+	err = out.MappingResult(target)
+	return multierr.Append(err, out.Release())
 }
 
 func (pl *plugeproc) Close() error {

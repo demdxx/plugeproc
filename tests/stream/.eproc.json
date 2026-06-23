@@ -1,9 +1,15 @@
 {
-  "type": "exec",
+  "driver": "exec",
+  "mode": "stream",
   "description": "stream processing by simple JSON protocol. Each message between process is one line JSON message, and response like one line JSON object as well",
-  "interface": "stream",
   "params": [
-    {"name": "data", "type": "binary", "is_input": true}
+    {
+      "name": "data",
+      "type": "binary",
+      "stdin": true
+    }
   ],
-  "output":  {"type": "flat.json"}
+  "output": {
+    "type": "line"
+  }
 }

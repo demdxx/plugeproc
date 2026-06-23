@@ -1,0 +1,17 @@
+{
+  "driver": "shell",
+  "run": ["echo", "{{first}}", "{{last}}"],
+  "params": [
+    {
+      "name": "first",
+      "type": "string"
+    },
+    {
+      "name": "last",
+      "type": "string"
+    }
+  ],
+  "output": {
+    "type": "binary"
+  }
+}

@@ -1,0 +1,11 @@
+driver: docker
+docker:
+  image: alpine:latest
+  pull_image: true
+  remove_after_done: true
+run: [sh, -c, "printf '{\"value\":\"%s\"}' {{text}}"]
+params:
+  - name: text
+    type: string
+output:
+  type: line

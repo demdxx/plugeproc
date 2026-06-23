@@ -1,0 +1,14 @@
+{
+    "driver": "shell",
+    "run": "printf '%s' \"{{msg}}\"",
+    "params": [
+      {
+        "name": "msg",
+        "type": "string"
+      }
+    ],
+    "output": {
+      "type": "binary"
+    }
+  }
+  

@@ -1,0 +1,15 @@
+driver: shell
+# run: | is a YAML literal block — the multiline script is passed verbatim to
+# bash -c.  Macro substitution is plain (no extra shell quoting) so the user's
+# own quoting inside the script is respected.
+run: |
+  read -r LINE
+  printf '%s:%s' "{{prefix}}" "$LINE"
+params:
+  - name: prefix
+    type: string
+  - name: data
+    type: binary
+    stdin: true
+output:
+  type: binary

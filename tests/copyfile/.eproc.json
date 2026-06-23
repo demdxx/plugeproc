@@ -1,10 +1,10 @@
 {
   "driver": "exec",
-  "args": ["{{data}}", "{{out}}"],
+  "args": ["{{src}}", "{{out}}"],
   "params": [
     {
-      "name": "data",
-      "type": "string"
+      "name": "src",
+      "type": "file"
     }
   ],
   "output": {

@@ -1,0 +1,11 @@
+driver: docker
+docker:
+  image: alpine:latest
+  pull_image: true
+  remove_after_done: true
+run: [echo, "-n", "{{msg}}"]
+params:
+  - name: msg
+    type: string
+output:
+  type: line

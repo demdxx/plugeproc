@@ -1,7 +1,8 @@
 package loader
 
-import "github.com/demdxx/plugeproc/models"
+import "github.com/demdxx/plugeproc/manifest"
 
+// Loader discovers and parses procedure manifests from some source.
 type Loader interface {
-	Load() ([]*models.Info, error)
+	Load() ([]*manifest.Manifest, error)
 }

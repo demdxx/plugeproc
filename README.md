@@ -30,7 +30,7 @@ Manifest provides basic information how to connect and use extension.
 
 ```json
 {
-  "type": "exec | shell",
+  "type": "exec | shell | docker",
   "interface": "default | stream",
   "command": "cat | sed '{{regexp}}'",
   "args": [],
@@ -48,14 +48,23 @@ Manifest provides basic information how to connect and use extension.
 * args - arguments of the shell command
 * params - list of parameters for command execution
   * name - name of the parameter
-  * type - **binary** - for input stream only; **json** - auto converting of input parameter into JSON string
+  * type
+    * **binary** - for input stream only
+    * **json** - auto converting of input parameter into JSON string
   * is_input - for input stream parameter
 * output - type of the output variable
-  * type - **binary** requires 4 bites LittleEndian order with size of the response; **line** - one line response with '\n' in the end
+  * type
+    * **binary** requires 4 bites LittleEndian order with size of the response
+    * **line** - one line response with `'\n'` in the end
+    * **json** - one line JSON string with `'\n'` in the end (same as `line`)
 
 ```go
   var sResp string
-  procs.Get("proc-name").Exec(&sResp, "s/Bash/Perl/", "Bash Scripting Language")
+  
+  err := procs.Get("proc-name").Exec(ctx, &sResp, "s/Bash/Perl/", "Bash Scripting Language")
+  // or
+  err := procs.Exec(ctx, "proc-name", &sResp, "s/Bash/Perl/", "Bash Scripting Language")
+
   fmt.Println("Response: " + sResp)
 ```
 
@@ -63,7 +72,13 @@ Manifest provides basic information how to connect and use extension.
 
 ## TODO
 
- * Add metafile YAML format support
- * Add support goplugin extensions
- * Add support wasm extensions
- * Add support static libraries extensions
+* [x] Support metafile JSON format (.eproc.json)
+* [x] Support metafile YAML format (.eproc.yaml)
+* [x] Support `shell` extensions
+* [x] Support `exec (procedures)` extensions
+* [x] Support stream interface support for (shell, procedures)
+* [ ] Support `docker` extensions
+* [ ] Support `goplugin` extensions
+* [ ] Support `wasm` extensions
+* [ ] Support `static libraries` extensions
+* [ ] Support `http` extensions

@@ -1,11 +1,10 @@
 {
   "driver": "shell",
-  "run": "cat",
+  "run": ["printf", "'%s'", "{{msg}}"],
   "params": [
     {
-      "name": "data",
-      "type": "binary",
-      "stdin": true
+      "name": "msg",
+      "type": "string"
     }
   ],
   "output": {

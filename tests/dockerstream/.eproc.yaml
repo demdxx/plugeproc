@@ -1,0 +1,14 @@
+driver: docker
+mode: stream
+docker:
+  image: alpine:latest
+  pull_image: true
+  retain_container: true
+# awk reads one line at a time and immediately flushes the response.
+run: [awk, "{ print \"ack:\" $0; fflush() }"]
+params:
+  - name: data
+    type: binary
+    stdin: true
+output:
+  type: line

@@ -1,10 +1,10 @@
 {
   "driver": "exec",
+  "args": ["{{input}}"],
   "params": [
     {
-      "name": "data",
-      "type": "binary",
-      "stdin": true
+      "name": "input",
+      "type": "file"
     }
   ],
   "output": {

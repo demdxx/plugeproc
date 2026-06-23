@@ -79,32 +79,52 @@ func (d *CallDriver) establish(ctx context.Context, params driver.Params) (_ *co
 
 	containerConfig := *d.containerConfig
 	containerConfig.Tty = false
-	if d.isGlobalCommand() && len(d.command) > 0 {
-		containerConfig.Cmd = d.command
-	}
-
-	_, d.containerID, err = getOrCreateContainer(ctx, d.cli, d.containerName,
-		params, &containerConfig, d.hostConfig, d.networkingConfig, d.platformConfig)
-	if err != nil {
-		return nil, err
-	}
 
 	d.conn = &containerConnect{
 		cli:             d.cli,
-		containerID:     d.containerID,
 		removeAfterDone: d.removeAfterDone,
 		streamType:      d.streamType,
 	}
 
-	hres, err := d.cli.ContainerAttach(ctx, d.containerID,
-		container.AttachOptions{Stdin: true, Stdout: true, Stderr: true, Logs: true})
-	if err != nil {
-		_ = d.Close()
-		return nil, errors.Wrap(ErrContainerAttach, err.Error())
-	}
-	d.conn.output = wrapExec(hres)
 	if d.isGlobalCommand() {
+		// One-shot execution: the command IS the container's main process.
+		// We must attach BEFORE starting so we never miss output from fast-exit
+		// commands (e.g. `echo hello` on Linux exits in microseconds).
+		if len(d.command) > 0 {
+			containerConfig.Cmd = d.command
+		}
+		d.containerID, err = createContainer(ctx, d.cli, d.containerName,
+			params, &containerConfig, d.hostConfig, d.networkingConfig, d.platformConfig)
+		if err != nil {
+			return nil, err
+		}
+		d.conn.containerID = d.containerID
+
+		hres, err := d.cli.ContainerAttach(ctx, d.containerID,
+			container.AttachOptions{Stdin: true, Stdout: true, Stderr: true, Stream: true})
+		if err != nil {
+			_ = d.Close()
+			return nil, errors.Wrap(ErrContainerAttach, err.Error())
+		}
+		// Both output and generalExec point to the same attach response:
+		// SendParams writes to Conn (stdin), ReadOutput reads from Reader (stdout).
+		d.conn.output = wrapExec(hres)
 		d.conn.generalExec = wrapExec(hres)
+
+		if err = d.cli.ContainerStart(ctx, d.containerID, container.StartOptions{}); err != nil {
+			_ = d.Close()
+			return nil, errors.Wrap(ErrContainerStart, err.Error())
+		}
+	} else {
+		// Sidecar execution: a long-running container is started first, then
+		// commands are exec'd inside it via ContainerExecCreate/Attach.
+		_, d.containerID, err = getOrCreateContainer(ctx, d.cli, d.containerName,
+			params, &containerConfig, d.hostConfig, d.networkingConfig, d.platformConfig)
+		if err != nil {
+			return nil, err
+		}
+		d.conn.containerID = d.containerID
+		// generalExec is left nil; conn.exec will call execWrapper per Exec call.
 	}
 
 	return d.conn, nil

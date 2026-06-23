@@ -40,29 +40,47 @@ func runContainer(
 	networkingConfig *network.NetworkingConfig,
 	platformConfig *ocispec.Platform,
 ) (started bool, id string, err error) {
+	id, err = createContainer(ctx, cli, name, params, config, hostConfig, networkingConfig, platformConfig)
+	if err != nil {
+		return false, "", err
+	}
+	if err = cli.ContainerStart(ctx, id, container.StartOptions{}); err != nil {
+		_ = cli.ContainerRemove(ctx, id, container.RemoveOptions{Force: true})
+		return false, "", errors.Wrap(ErrContainerStart, err.Error())
+	}
+	return false, id, nil
+}
+
+// createContainer creates (but does not start) a container after applying macro
+// substitution to Cmd and Entrypoint.  Callers that need to attach before
+// starting should use this function followed by ContainerAttach / ContainerStart.
+func createContainer(
+	ctx context.Context,
+	cli *client.Client,
+	name string,
+	params driver.Params,
+	config *container.Config,
+	hostConfig *container.HostConfig,
+	networkingConfig *network.NetworkingConfig,
+	platformConfig *ocispec.Platform,
+) (id string, err error) {
 	containerConfig := *config
 
 	// Docker accepts discrete argv elements — plain macro substitution without shell quoting.
 	containerConfig.Cmd, err = params.PrepareMacros(``, ``, containerConfig.Cmd...)
 	if err != nil {
-		return false, "", err
+		return "", err
 	}
 	containerConfig.Entrypoint, err = params.PrepareMacros(``, ``, containerConfig.Entrypoint...)
 	if err != nil {
-		return false, "", err
+		return "", err
 	}
 
 	resp, err := cli.ContainerCreate(ctx, &containerConfig, hostConfig, networkingConfig, platformConfig, name)
 	if err != nil {
-		return false, "", errors.Wrap(ErrContainerCreate, err.Error())
+		return "", errors.Wrap(ErrContainerCreate, err.Error())
 	}
-
-	if err = cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
-		_ = cli.ContainerRemove(ctx, resp.ID, container.RemoveOptions{Force: true})
-		return false, "", errors.Wrap(ErrContainerStart, err.Error())
-	}
-
-	return false, resp.ID, nil
+	return resp.ID, nil
 }
 
 func getContainerByName(ctx context.Context, cli *client.Client, name string) (string, error) {

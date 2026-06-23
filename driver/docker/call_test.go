@@ -20,10 +20,10 @@ func newDockerClient(t *testing.T) *dockerclient.Client {
 		t.Skip("cannot create Docker client:", err)
 	}
 	if _, err = cli.Ping(context.Background()); err != nil {
-		cli.Close()
+		_ = cli.Close()
 		t.Skip("Docker daemon not reachable:", err)
 	}
-	t.Cleanup(func() { cli.Close() })
+	t.Cleanup(func() { _ = cli.Close() })
 	return cli
 }
 
@@ -60,7 +60,7 @@ func TestCallDriverBinaryInput(t *testing.T) {
 	ctx := context.Background()
 
 	drv := NewCallDriver(cli, []string{"cat"}, sidecarOpts(true)...)
-	defer drv.Close()
+	defer func() { _ = drv.Close() }()
 
 	for _, data := range []string{"hello", "second call"} {
 		var out driver.Output
@@ -77,7 +77,7 @@ func TestCallDriverJSONOutput(t *testing.T) {
 	drv := NewCallDriver(cli,
 		[]string{"sh", "-c", `printf '{"value":"%s","n":7}' {{msg}}`},
 		alpineOpts(true)...)
-	defer drv.Close()
+	defer func() { _ = drv.Close() }()
 
 	var result struct {
 		Value string `json:"value"`
@@ -96,7 +96,7 @@ func TestCallDriverJSONInput(t *testing.T) {
 	ctx := context.Background()
 
 	drv := NewCallDriver(cli, []string{"cat"}, sidecarOpts(true)...)
-	defer drv.Close()
+	defer func() { _ = drv.Close() }()
 
 	type payload struct {
 		Key string `json:"key"`
@@ -120,7 +120,7 @@ func TestCallDriverRetainedContainer(t *testing.T) {
 	drv := NewCallDriver(cli, []string{"echo", "-n", "{{v}}"},
 		WithSimpleContainerConfig("alpine:latest", []string{"tail", "-f", "/dev/null"}),
 		WithPullImage(true), WithRemoveAfterDone(true), WithRetainContainer(true))
-	defer drv.Close()
+	defer func() { _ = drv.Close() }()
 
 	for _, v := range []string{"first", "second", "third"} {
 		var out driver.Output

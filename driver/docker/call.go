@@ -59,7 +59,7 @@ func (d *CallDriver) Exec(ctx context.Context, params []*driver.Param, out *driv
 	// When the container is retained we must not release it after each call;
 	// cleanup happens in Close().
 	if !d.retainContainer {
-		defer conn.Release()
+		defer func() { _ = conn.Release() }()
 	}
 	return conn.exec(ctx, d.command, params, out)
 }

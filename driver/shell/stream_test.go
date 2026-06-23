@@ -24,7 +24,7 @@ func TestStreamDriverJSON(t *testing.T) {
 			`  echo "{\"input\":$V,\"output\":$((V*2))}"` + "\n" +
 			`done`,
 	}, nil)
-	defer drv.Close()
+	defer func() { _ = drv.Close() }()
 
 	cases := []struct{ in, wantOutput int }{{1, 2}, {3, 6}, {5, 10}}
 	for _, c := range cases {
@@ -50,7 +50,7 @@ func TestStreamDriverText(t *testing.T) {
 			`  echo "$line"` + "\n" +
 			`done`,
 	}, nil)
-	defer drv.Close()
+	defer func() { _ = drv.Close() }()
 
 	for _, msg := range []string{"hello", "world", "stream test"} {
 		var out driver.Output
@@ -68,7 +68,7 @@ func TestStreamDriverMultipleRequests(t *testing.T) {
 			`  echo "got:$line"` + "\n" +
 			`done`,
 	}, nil)
-	defer drv.Close()
+	defer func() { _ = drv.Close() }()
 
 	for i := 0; i < 5; i++ {
 		var out driver.Output

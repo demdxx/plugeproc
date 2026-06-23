@@ -54,7 +54,7 @@ func requireDocker(t *testing.T) {
 	if err != nil {
 		t.Skip("cannot create Docker client:", err)
 	}
-	defer cli.Close()
+	defer func() { _ = cli.Close() }()
 	if _, err = cli.Ping(context.Background()); err != nil {
 		t.Skip("Docker daemon not reachable:", err)
 	}

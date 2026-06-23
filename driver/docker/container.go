@@ -87,7 +87,7 @@ func (c *containerConnect) exec(ctx context.Context, command []string, params dr
 	if c.streamType {
 		c.generalExec = cExec
 	} else {
-		defer cExec.Release()
+		defer func() { _ = cExec.Release() }()
 	}
 
 	// When cExec was created by execWrapper its own connection carries stdout;

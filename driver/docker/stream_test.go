@@ -30,7 +30,7 @@ func TestStreamDriverText(t *testing.T) {
 		}),
 		WithPullImage(true),
 	)
-	defer drv.Close()
+	defer func() { _ = drv.Close() }()
 
 	for _, msg := range []string{"hello", "world"} {
 		var out driver.Output
@@ -60,7 +60,7 @@ done`
 		}),
 		WithPullImage(true),
 	)
-	defer drv.Close()
+	defer func() { _ = drv.Close() }()
 
 	for _, c := range []struct{ in, want int }{{1, 2}, {3, 6}, {5, 10}} {
 		var out driver.Output
